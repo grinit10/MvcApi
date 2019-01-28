@@ -1,0 +1,139 @@
+﻿@model dynamic
+@{
+    ViewBag.Title = "NewForm";
+
+}
+
+<h2>NewForm</h2>
+<form id="newRental">
+    <div class="form-group">
+        <label>Customer</label>
+        <div class="tt-container">
+            <input id="customer" name="customer" required data-rule-customerValidation="true" type="text" value="" class="form-control" />
+        </div>
+    </div>
+
+    <div>
+        <label>Movie</label>
+        <div class="tt-container">
+            <input id="movie" name="movie" data-rule-atLeastOneMovie="true" data-rule-movieValidation="true" type="text" value="" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 col-sm-4">
+            <ul id="movieList"  class="list-group" value=""></ul>
+        </div>
+    </div>
+
+    <button id="submit" class="btn btn-primary">Submit</button>
+</form>
+@section scripts{
+
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(document).ready(function () {
+
+            var rentalvm = {
+                movieIds: []
+            };
+
+            var customers = new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                remote: {
+                    url: '/api/customers?query=%QUERY',
+                    wildcard: '%QUERY'
+                }
+            });
+
+            var movies = new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                remote: {
+                    url: '/api/movies?query=%QUERY',
+                    wildcard: '%QUERY'
+                }
+            });
+
+            $('#customer').typeahead({
+                minLength: 2,
+                highlight: true
+            },
+                {
+                    name: 'customers',
+                    display: 'name',
+                    source: customers
+                }).on("typeahead:select", function (e, customer) {
+                    rentalvm.customerId = customer.id;
+                });
+
+
+            $('#movie').typeahead({
+                minLength: 2,
+                highlight: true
+            },
+                {
+                    name: 'movies',
+                    display: 'name',
+                    source: movies
+                }).on("typeahead:select", function (e, movie) {
+
+                    $("#movieList").append("<li class='list-group-item'>" + movie.name + "</li>");
+
+                    $("#movie").typeahead("val", "");
+
+                    rentalvm.movieIds.push(movie.id);
+                });
+
+            //custom validation 'customerValidation'.
+            $.validator.addMethod("customerValidation", function () {
+                return rentalvm.customerId && rentalvm.customerId !== 0;
+            }, "Please enter a valid customer.");
+
+            //Custom validation 'atLeastOneMovie'
+            $.validator.addMethod("atLeastOneMovie", function () {
+              return  rentalvm.movieIds.length > 0;
+            }, "Please enter at least one movie");
+
+            //custom validation 'movieValdation'
+            //$.validator.addMethod("movieValidation", function () {
+            //    for (x in rentalvm.movieIds)
+            //        return x > 0;
+            //}, "Please");
+
+            $('#newRental').validate({
+                submitHandler: function () {
+                
+                    $.ajax({
+                        url: '/api/newRental',
+                        method: 'post',
+                        data: rentalvm,
+                        success: function () {
+
+                            toastr.success("Rental form sucessfully posted.");
+                            $(".list-group-item").css("display", "none");
+
+                            $("#customer").typeahead("val", "");
+                            $("#submit").css("background-color", "red");
+
+                        },
+                        complete: function (e) {
+                            console.log(e);
+                        },
+                        error: function (e) {
+                            toastr.error("Something unexpected has happened.");
+                        }
+                    });
+
+                    return false;
+                }
+            });
+
+        });
+
+    </script>
+
+
+}
+

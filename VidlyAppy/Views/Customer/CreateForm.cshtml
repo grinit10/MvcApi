@@ -1,0 +1,49 @@
+﻿@model VidlyAppy.ViewModels.CustomerMembershipTypeVM
+@{
+
+
+    ViewBag.Title = "CreateForm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+
+}
+
+<h2>New Customer</h2>
+
+@using (Html.BeginForm("Create", "Customer"))
+{
+    @*
+        This method is used to mention all errors of this page.
+        First param excludes the individual property errors and gives a error message.
+    *@
+    @Html.ValidationSummary(true, "Please fix the errors.")
+
+    <div class="form-group">
+        @Html.LabelFor(c => c.customer.Name)
+        @Html.TextBoxFor(c => c.customer.Name, new { @class = "form-control" })
+        @Html.ValidationMessageFor(c => c.customer.Name)
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(c => c.customer.BirthDay)
+        @Html.TextBoxFor(c => c.customer.BirthDay, new { @class = "form-control" })
+        @Html.ValidationMessageFor(c => c.customer.BirthDay)
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(c => c.customer.MembershipTypeId)
+        @Html.DropDownListFor(c => c.customer.MembershipTypeId, new SelectList(Model.membershipTypes, "Id", "Name"), "Select Membership type", new { @class = "form-control" })
+    </div>
+    <div class="checkbox">
+        <label>
+            @Html.CheckBoxFor(c => c.customer.IsSubscribedNewsLetter) Subscribed to news latter?
+        </label>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    @Html.AntiForgeryToken()
+
+}
+@section scripts
+{
+  @Scripts.Render("~/bundles/jqueryval")
+}
+
+
